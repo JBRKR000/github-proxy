@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 class RepoService {
@@ -20,9 +21,9 @@ class RepoService {
             return List.of();
         }
 
-        return Arrays.stream(repos)
+        List<CompletableFuture<RepoResponse>> futures = Arrays.stream(repos)
                 .filter(repo -> !repo.fork())
-                .map(repo -> {
+                .map(repo -> CompletableFuture.supplyAsync(() -> {
                     GithubBranch[] branches =
                             githubClient.getUserBranches(repo.owner().login(), repo.name());
 
@@ -38,7 +39,11 @@ class RepoService {
                             repo.owner().login(),
                             branchResponses
                     );
-                })
+                }))
+                .toList();
+
+        return futures.stream()
+                .map(CompletableFuture::join)
                 .toList();
     }
 }
