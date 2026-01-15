@@ -14,8 +14,8 @@ import org.springframework.web.context.WebApplicationContext;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -59,7 +59,7 @@ class GithubProxyApplicationIT {
                     ]
                 """)));
 
-        mockMvc.perform(get("/users/{username}/repositories", username))
+        mockMvc.perform(MockMvcRequestBuilders.get("/users/{username}/repositories", username))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
 
@@ -79,7 +79,7 @@ class GithubProxyApplicationIT {
         String username = "nonexistentuser";
         wireMock.stubFor(get(urlPathEqualTo("/users/nonexistentuser/repos"))
                 .willReturn(notFound()));
-        mockMvc.perform(get("/users/{username}/repositories", username))
+        mockMvc.perform(MockMvcRequestBuilders.get("/users/{username}/repositories", username))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
                 .andExpect(jsonPath("$.status").value(404))
@@ -121,7 +121,7 @@ class GithubProxyApplicationIT {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        mockMvc.perform(get("/users/{username}/repositories", username))
+        mockMvc.perform(MockMvcRequestBuilders.get("/users/{username}/repositories", username))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
                 .andExpect(jsonPath("$.length()").value(2))
